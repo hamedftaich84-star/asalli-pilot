@@ -4,25 +4,32 @@ import { supabase } from "../services/supabase";
 
 export default function Dashboard() {
   const [users, setUsers] = useState([]);
+  const [nbCauseries, setNbCauseries] = useState(0);
 
   useEffect(() => {
-    async function loadUsers() {
-      const { data, error } = await supabase
+    async function loadData() {
+      const usersResult = await supabase
         .from("users")
         .select("*");
 
-      if (error) {
-  console.error("Erreur Supabase :", error);
-  alert(JSON.stringify(error));
-  return;
-}
+      if (usersResult.error) {
+        console.error("Erreur users :", usersResult.error);
+      } else {
+        setUsers(usersResult.data || []);
+      }
 
-      console.log("Données Supabase :", data);
-console.log("Erreur Supabase :", error);
-setUsers(data || []);
+      const causeriesResult = await supabase
+        .from("causeries_sse")
+        .select("*");
+
+      if (causeriesResult.error) {
+        console.error("Erreur causeries :", causeriesResult.error);
+      } else {
+        setNbCauseries(causeriesResult.data.length);
+      }
     }
 
-    loadUsers();
+    loadData();
   }, []);
 
   return (
@@ -33,7 +40,7 @@ setUsers(data || []);
 
       <div>
         <p>Utilisateurs : {users.length}</p>
-        <p>Causeries SSE : 0</p>
+        <p>Causeries SSE : {nbCauseries}</p>
         <p>Visites SSE : 0</p>
         <p>REX : 0</p>
         <p>Actions : 0</p>
