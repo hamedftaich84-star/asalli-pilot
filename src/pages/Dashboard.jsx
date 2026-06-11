@@ -5,27 +5,26 @@ import { supabase } from "../services/supabase";
 export default function Dashboard() {
   const [users, setUsers] = useState([]);
   const [nbCauseries, setNbCauseries] = useState(0);
+  const [nbVisites, setNbVisites] = useState(0);
 
   useEffect(() => {
     async function loadData() {
-      const usersResult = await supabase
-        .from("users")
-        .select("*");
+      const usersResult = await supabase.from("users").select("*");
 
-      if (usersResult.error) {
-        console.error("Erreur users :", usersResult.error);
-      } else {
+      if (!usersResult.error) {
         setUsers(usersResult.data || []);
       }
 
-      const causeriesResult = await supabase
-        .from("causeries_sse")
-        .select("*");
+      const causeriesResult = await supabase.from("causeries_sse").select("*");
 
-      if (causeriesResult.error) {
-        console.error("Erreur causeries :", causeriesResult.error);
-      } else {
+      if (!causeriesResult.error) {
         setNbCauseries(causeriesResult.data.length);
+      }
+
+      const visitesResult = await supabase.from("visites_sse").select("*");
+
+      if (!visitesResult.error) {
+        setNbVisites(visitesResult.data.length);
       }
     }
 
@@ -41,7 +40,7 @@ export default function Dashboard() {
       <div>
         <p>Utilisateurs : {users.length}</p>
         <p>Causeries SSE : {nbCauseries}</p>
-        <p>Visites SSE : 0</p>
+        <p>Visites SSE : {nbVisites}</p>
         <p>REX : 0</p>
         <p>Actions : 0</p>
         <p>Audits : 0</p>
