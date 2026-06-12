@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
+import PageLayout from "../components/PageLayout";
+import ErrorMessage from "../components/ErrorMessage";
 
 export default function Audits() {
   const [audits, setAudits] = useState([]);
@@ -55,13 +57,13 @@ export default function Audits() {
       return;
     }
 
-    if (!observation.trim()) {
-      setMessageErreur("Veuillez saisir l'observation");
+    if (!dateAudit) {
+      setMessageErreur("Veuillez entrer la date d'audit");
       return;
     }
 
-    if (!dateAudit) {
-      setMessageErreur("Veuillez entrer la date d'audit");
+    if (!observation.trim()) {
+      setMessageErreur("Veuillez saisir l'observation");
       return;
     }
 
@@ -88,7 +90,6 @@ export default function Audits() {
     setResultat("");
     setObservation("");
     setDateAudit("");
-    setMessageErreur("");
 
     chargerAudits();
   }
@@ -125,14 +126,9 @@ export default function Audits() {
   }
 
   return (
-    <div className="page-container">
-      <h1>Audits ISO</h1>
-
+    <PageLayout title="Audits ISO">
       <form className="form-card" onSubmit={ajouterAudit} noValidate>
-        <select
-          value={norme}
-          onChange={(e) => setNorme(e.target.value)}
-        >
+        <select value={norme} onChange={(e) => setNorme(e.target.value)}>
           <option value="">Choisir une norme</option>
           <option value="ISO 9001">ISO 9001</option>
           <option value="ISO 14001">ISO 14001</option>
@@ -178,20 +174,7 @@ export default function Audits() {
         <button type="submit">Ajouter l'audit</button>
       </form>
 
-      {messageErreur && (
-        <div
-          style={{
-            background: "#fee2e2",
-            color: "#991b1b",
-            padding: "12px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-            fontWeight: "bold",
-          }}
-        >
-          {messageErreur}
-        </div>
-      )}
+      <ErrorMessage message={messageErreur} />
 
       <h2>Liste des audits</h2>
 
@@ -223,8 +206,7 @@ export default function Audits() {
             </p>
 
             <p>
-              <strong>Date d'audit :</strong>{" "}
-              {formatDate(audit.date_audit)}
+              <strong>Date d'audit :</strong> {formatDate(audit.date_audit)}
             </p>
 
             <p>
@@ -237,6 +219,6 @@ export default function Audits() {
           </div>
         ))}
       </div>
-    </div>
+    </PageLayout>
   );
 }
