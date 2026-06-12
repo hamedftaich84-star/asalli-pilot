@@ -88,7 +88,7 @@ export default function Rex() {
         >
           <option value="">Type de REX</option>
           <option value="Accident">Accident</option>
-          <option value="Presqu accident">Presqu accident</option>
+          <option value="Presqu'accident">Presqu'accident</option>
           <option value="Situation dangereuse">Situation dangereuse</option>
           <option value="Bonne pratique">Bonne pratique</option>
         </select>
