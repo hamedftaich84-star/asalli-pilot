@@ -7,27 +7,40 @@ export default function Dashboard() {
   const [nbCauseries, setNbCauseries] = useState(0);
   const [nbVisites, setNbVisites] = useState(0);
   const [nbRex, setNbRex] = useState(0);
+  const [nbActions, setNbActions] = useState(0);
+  const [nbAudits, setNbAudits] = useState(0);
 
   useEffect(() => {
+    async function countTable(table, setter) {
+      const { data, error } = await supabase.from(table).select("*");
+
+      if (error) {
+        console.error(`Erreur ${table} :`, error);
+        return;
+      }
+
+      setter(data?.length || 0);
+    }
+
     async function loadData() {
       const usersResult = await supabase.from("users").select("*");
-      if (!usersResult.error) setUsers(usersResult.data || []);
 
-      const causeriesResult = await supabase.from("causeries_sse").select("*");
-      if (!causeriesResult.error) setNbCauseries(causeriesResult.data.length);
+      if (!usersResult.error) {
+        setUsers(usersResult.data || []);
+      }
 
-      const visitesResult = await supabase.from("visites_sse").select("*");
-      if (!visitesResult.error) setNbVisites(visitesResult.data.length);
-
-      const rexResult = await supabase.from("rex").select("*");
-      if (!rexResult.error) setNbRex(rexResult.data.length);
+      countTable("causeries_sse", setNbCauseries);
+      countTable("visites_sse", setNbVisites);
+      countTable("rex", setNbRex);
+      countTable("actions_correctives", setNbActions);
+      countTable("audits_iso", setNbAudits);
     }
 
     loadData();
   }, []);
 
   return (
-    <div style={{ padding: "30px" }}>
+    <div style={{ padding: "30px", fontFamily: "Arial, sans-serif" }}>
       <h1>Tableau de bord ASALLI Pilot</h1>
 
       <h2>Indicateurs</h2>
@@ -37,8 +50,8 @@ export default function Dashboard() {
         <p>Causeries SSE : {nbCauseries}</p>
         <p>Visites SSE : {nbVisites}</p>
         <p>REX : {nbRex}</p>
-        <p>Actions : 0</p>
-        <p>Audits : 0</p>
+        <p>Actions : {nbActions}</p>
+        <p>Audits : {nbAudits}</p>
       </div>
 
       <PDCAWheel />
