@@ -1,5 +1,7 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
+import { supabase } from "./services/supabase";
 import Navbar from "./components/Navbar";
 
 import Dashboard from "./pages/Dashboard";
@@ -9,13 +11,57 @@ import Rex from "./pages/Rex";
 import Actions from "./pages/Actions";
 import Audits from "./pages/Audits";
 import Users from "./pages/Users";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
-export default function App() {
+function AppContent() {
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+
+  useEffect(() => {
+    async function getSession() {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      setLoading(false);
+    }
+
+    getSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (loading) {
+    return <p style={{ padding: "30px" }}>Chargement...</p>;
+  }
+
+  const isAuthPage =
+    location.pathname === "/login" || location.pathname === "/register";
+
+  if (!session && !isAuthPage) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (session && isAuthPage) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
-    <BrowserRouter>
-      <Navbar />
+    <>
+      {!isAuthPage && <Navbar />}
 
       <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
         <Route path="/" element={<Dashboard />} />
         <Route path="/causeries" element={<Causeries />} />
         <Route path="/visites" element={<Visites />} />
@@ -24,6 +70,14 @@ export default function App() {
         <Route path="/audits" element={<Audits />} />
         <Route path="/users" element={<Users />} />
       </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

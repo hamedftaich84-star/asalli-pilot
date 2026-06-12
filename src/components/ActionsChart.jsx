@@ -1,27 +1,20 @@
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
+  PieChart,
+  Pie,
+  Cell,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 
-export default function AuditsChart({ iso9001, iso14001, iso45001 }) {
+export default function ActionsChart({ ouvertes, enCours, cloturees }) {
   const data = [
-    {
-      norme: "ISO 9001",
-      audits: iso9001,
-    },
-    {
-      norme: "ISO 14001",
-      audits: iso14001,
-    },
-    {
-      norme: "ISO 45001",
-      audits: iso45001,
-    },
+    { name: "Ouvertes", value: ouvertes },
+    { name: "En cours", value: enCours },
+    { name: "Clôturées", value: cloturees },
   ];
+
+  const COLORS = ["#ef4444", "#f59e0b", "#22c55e"];
 
   return (
     <div
@@ -34,16 +27,20 @@ export default function AuditsChart({ iso9001, iso14001, iso45001 }) {
       }}
     >
       <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
-        Audits par norme
+        Répartition des actions correctives
       </h2>
 
       <ResponsiveContainer width="100%" height={350}>
-        <BarChart data={data}>
-          <XAxis dataKey="norme" />
-          <YAxis allowDecimals={false} />
+        <PieChart>
+          <Pie data={data} dataKey="value" nameKey="name" outerRadius={120} label>
+            {data.map((entry, index) => (
+              <Cell key={index} fill={COLORS[index]} />
+            ))}
+          </Pie>
+
           <Tooltip />
-          <Bar dataKey="audits" fill="#1f2937" />
-        </BarChart>
+          <Legend />
+        </PieChart>
       </ResponsiveContainer>
     </div>
   );
