@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PDCAWheel from "../components/PDCAWheel";
 import { supabase } from "../services/supabase";
+import "../App.css";
 
 export default function Dashboard() {
   const [users, setUsers] = useState([]);
@@ -40,29 +41,56 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div style={{ padding: "30px", fontFamily: "Arial, sans-serif" }}>
+    <div className="dashboard-page">
       <h1>Tableau de bord ASALLI Pilot</h1>
 
       <h2>Indicateurs</h2>
 
-      <div>
-        <p>Utilisateurs : {users.length}</p>
-        <p>Causeries SSE : {nbCauseries}</p>
-        <p>Visites SSE : {nbVisites}</p>
-        <p>REX : {nbRex}</p>
-        <p>Actions : {nbActions}</p>
-        <p>Audits : {nbAudits}</p>
+      <div className="kpi-grid">
+        <div className="kpi-card">
+          <span>Utilisateurs</span>
+          <strong>{users.length}</strong>
+        </div>
+
+        <div className="kpi-card">
+          <span>Causeries SSE</span>
+          <strong>{nbCauseries}</strong>
+        </div>
+
+        <div className="kpi-card">
+          <span>Visites SSE</span>
+          <strong>{nbVisites}</strong>
+        </div>
+
+        <div className="kpi-card">
+          <span>REX</span>
+          <strong>{nbRex}</strong>
+        </div>
+
+        <div className="kpi-card">
+          <span>Actions</span>
+          <strong>{nbActions}</strong>
+        </div>
+
+        <div className="kpi-card">
+          <span>Audits</span>
+          <strong>{nbAudits}</strong>
+        </div>
       </div>
 
-      <PDCAWheel />
+      <div className="dashboard-section">
+        <PDCAWheel />
+      </div>
 
       <h2>Utilisateurs</h2>
 
-      {users.map((user) => (
-        <div key={user.id}>
-          {user.prenom} {user.nom} — {user.role}
-        </div>
-      ))}
+      <div className="users-list">
+        {users.map((user) => (
+          <div key={user.id} className="user-line">
+            {user.prenom} {user.nom} — {user.role}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
