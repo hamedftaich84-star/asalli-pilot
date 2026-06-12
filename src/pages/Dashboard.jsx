@@ -3,6 +3,7 @@ import PDCAWheel from "../components/PDCAWheel";
 import ActionsChart from "../components/ActionsChart";
 import AuditsChart from "../components/AuditsChart";
 import { supabase } from "../services/supabase";
+import { exportDashboardPdf } from "../services/exportDashboardPdf";
 import "../App.css";
 
 export default function Dashboard() {
@@ -88,9 +89,41 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  function exporterDashboard() {
+    exportDashboardPdf({
+      utilisateurs: users.length,
+      causeries: nbCauseries,
+      visites: nbVisites,
+      rex: nbRex,
+      audits: nbAudits,
+      actionsOuvertes,
+      actionsEnCours,
+      actionsCloturees,
+      actionsEnRetard,
+      auditsIso9001,
+      auditsIso14001,
+      auditsIso45001,
+    });
+  }
+
   return (
     <div className="dashboard-page">
       <h1>Tableau de bord ASALLI Pilot</h1>
+
+      <button
+        onClick={exporterDashboard}
+        style={{
+          marginBottom: "20px",
+          background: "#2563eb",
+          color: "white",
+          border: "none",
+          padding: "10px 16px",
+          borderRadius: "8px",
+          cursor: "pointer",
+        }}
+      >
+        Exporter le tableau de bord PDF
+      </button>
 
       <h2>Indicateurs QSE</h2>
 

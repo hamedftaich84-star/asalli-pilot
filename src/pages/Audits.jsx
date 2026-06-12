@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 import PageLayout from "../components/PageLayout";
 import ErrorMessage from "../components/ErrorMessage";
+import { exportAuditsPdf } from "../services/exportAuditsPdf";
 
 export default function Audits() {
   const [audits, setAudits] = useState([]);
@@ -175,6 +176,21 @@ export default function Audits() {
       </form>
 
       <ErrorMessage message={messageErreur} />
+
+      <button
+        onClick={() => exportAuditsPdf(audits)}
+        style={{
+          marginBottom: "20px",
+          background: "#2563eb",
+          color: "white",
+          border: "none",
+          padding: "10px 16px",
+          borderRadius: "8px",
+          cursor: "pointer",
+        }}
+      >
+        Exporter PDF
+      </button>
 
       <h2>Liste des audits</h2>
 
