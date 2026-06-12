@@ -1,88 +1,53 @@
-body {
-  margin: 0;
-  background: #f3f4f6;
-  font-family: Arial, sans-serif;
-}
-
-nav {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.dashboard-page {
+.page-container {
   padding: 40px;
-  max-width: 1100px;
-  margin: 0 auto;
+  max-width: 1200px;
+  margin: auto;
 }
 
-.dashboard-page h1 {
-  text-align: center;
-  font-size: 42px;
-  margin-bottom: 10px;
-}
-
-.dashboard-page h2 {
-  text-align: center;
-  margin-top: 25px;
-}
-
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin: 30px 0;
-}
-
-.kpi-card {
+.form-card {
   background: white;
-  border-radius: 14px;
-  padding: 24px;
-  text-align: center;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  border-left: 6px solid #1f2937;
-}
-
-.kpi-card span {
-  display: block;
-  color: #4b5563;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-
-.kpi-card strong {
-  display: block;
-  font-size: 34px;
-  color: #111827;
-}
-
-.dashboard-section {
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
   display: flex;
-  justify-content: center;
-  margin: 30px 0;
+  gap: 10px;
+  flex-wrap: wrap;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
-.users-list {
-  max-width: 500px;
-  margin: 0 auto;
+.form-card input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }
 
-.user-line {
+.form-card button {
+  background: #1f2937;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+  gap: 20px;
+}
+
+.item-card {
   background: white;
-  padding: 14px;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
-@media (max-width: 800px) {
-  .kpi-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-page {
-    padding: 20px;
-  }
-
-  .dashboard-page h1 {
-    font-size: 30px;
-  }
+.item-card button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
 }

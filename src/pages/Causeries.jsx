@@ -7,14 +7,14 @@ export default function Causeries() {
   const [titre, setTitre] = useState("");
   const [animateur, setAnimateur] = useState("");
   const [dateCauserie, setDateCauserie] = useState("");
-  const [participants, setParticipants] = useState(0);
+  const [participants, setParticipants] = useState("");
   const [observations, setObservations] = useState("");
 
-  async function chargerCauseries() {
+  async function loadCauseries() {
     const { data, error } = await supabase
       .from("causeries_sse")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("date_causerie", { ascending: false });
 
     if (error) {
       console.error("Erreur chargement causeries :", error);
@@ -25,7 +25,7 @@ export default function Causeries() {
   }
 
   useEffect(() => {
-    chargerCauseries();
+    loadCauseries();
   }, []);
 
   async function ajouterCauserie(event) {
@@ -33,16 +33,16 @@ export default function Causeries() {
 
     const { error } = await supabase.from("causeries_sse").insert([
       {
-        titre,
-        animateur,
+        titre: titre,
+        animateur: animateur,
         date_causerie: dateCauserie,
         participants: Number(participants),
-        observations,
+        observations: observations,
       },
     ]);
 
     if (error) {
-      alert("Erreur lors de l'enregistrement");
+      alert("Erreur lors de l'ajout de la causerie");
       console.error(error);
       return;
     }
@@ -50,26 +50,38 @@ export default function Causeries() {
     setTitre("");
     setAnimateur("");
     setDateCauserie("");
-    setParticipants(0);
+    setParticipants("");
     setObservations("");
 
-    chargerCauseries();
+    loadCauseries();
+  }
+
+  async function supprimerCauserie(id) {
+    const confirmation = confirm("Supprimer cette causerie ?");
+
+    if (!confirmation) return;
+
+    const { error } = await supabase
+      .from("causeries_sse")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      alert("Erreur lors de la suppression");
+      console.error(error);
+      return;
+    }
+
+    loadCauseries();
   }
 
   return (
-    <div style={{ padding: "30px" }}>
+    <div className="page-container">
       <h1>Causeries SSE</h1>
 
-      <form
-        onSubmit={ajouterCauserie}
-        style={{
-          display: "grid",
-          gap: "10px",
-          maxWidth: "500px",
-          marginBottom: "30px",
-        }}
-      >
+      <form className="form-card" onSubmit={ajouterCauserie}>
         <input
+          type="text"
           placeholder="Titre de la causerie"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
@@ -77,9 +89,11 @@ export default function Causeries() {
         />
 
         <input
+          type="text"
           placeholder="Animateur"
           value={animateur}
           onChange={(e) => setAnimateur(e.target.value)}
+          required
         />
 
         <input
@@ -94,6 +108,7 @@ export default function Causeries() {
           placeholder="Nombre de participants"
           value={participants}
           onChange={(e) => setParticipants(e.target.value)}
+          required
         />
 
         <textarea
@@ -102,27 +117,38 @@ export default function Causeries() {
           onChange={(e) => setObservations(e.target.value)}
         />
 
-        <button type="submit">Enregistrer la causerie</button>
+        <button type="submit">Ajouter la causerie</button>
       </form>
 
       <h2>Liste des causeries</h2>
 
-      {causeries.map((causerie) => (
-        <div
-          key={causerie.id}
-          style={{
-            border: "1px solid #ddd",
-            padding: "15px",
-            marginBottom: "10px",
-          }}
-        >
-          <strong>{causerie.titre}</strong>
-          <p>Animateur : {causerie.animateur}</p>
-          <p>Date : {causerie.date_causerie}</p>
-          <p>Participants : {causerie.participants}</p>
-          <p>Observations : {causerie.observations}</p>
-        </div>
-      ))}
+      <div className="list-container">
+        {causeries.map((c) => (
+          <div key={c.id} className="item-card">
+            <h3>{c.titre}</h3>
+
+            <p>
+              <strong>Animateur :</strong> {c.animateur}
+            </p>
+
+            <p>
+              <strong>Date :</strong> {c.date_causerie}
+            </p>
+
+            <p>
+              <strong>Participants :</strong> {c.participants}
+            </p>
+
+            <p>
+              <strong>Observations :</strong> {c.observations}
+            </p>
+
+            <button onClick={() => supprimerCauserie(c.id)}>
+              Supprimer
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
