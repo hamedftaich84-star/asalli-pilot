@@ -12,6 +12,12 @@ export default function Actions() {
   const [echeance, setEcheance] = useState("");
   const [messageErreur, setMessageErreur] = useState("");
 
+  const [actionEnModification, setActionEnModification] = useState(null);
+  const [titreModif, setTitreModif] = useState("");
+  const [responsableModif, setResponsableModif] = useState("");
+  const [statutModif, setStatutModif] = useState("");
+  const [echeanceModif, setEcheanceModif] = useState("");
+
   async function chargerActions() {
     const { data, error } = await supabase
       .from("actions_correctives")
@@ -97,6 +103,66 @@ export default function Actions() {
     chargerActions();
   }
 
+  function ouvrirModification(action) {
+    setActionEnModification(action.id);
+    setTitreModif(action.titre || "");
+    setResponsableModif(action.responsable || "");
+    setStatutModif(action.statut || "");
+    setEcheanceModif(action.echeance || "");
+    setMessageErreur("");
+  }
+
+  function annulerModification() {
+    setActionEnModification(null);
+    setTitreModif("");
+    setResponsableModif("");
+    setStatutModif("");
+    setEcheanceModif("");
+  }
+
+  async function enregistrerModification(id) {
+    setMessageErreur("");
+
+    if (!titreModif.trim()) {
+      setMessageErreur("Veuillez saisir le titre de l'action");
+      return;
+    }
+
+    if (!responsableModif.trim()) {
+      setMessageErreur("Veuillez saisir le responsable");
+      return;
+    }
+
+    if (!statutModif) {
+      setMessageErreur("Veuillez sélectionner un statut");
+      return;
+    }
+
+    if (!echeanceModif) {
+      setMessageErreur("Veuillez entrer la date d'échéance");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("actions_correctives")
+      .update({
+        titre: titreModif,
+        responsable: responsableModif,
+        statut: statutModif,
+        echeance: echeanceModif,
+      })
+      .eq("id", id);
+
+    if (error) {
+      setMessageErreur("Erreur lors de la modification");
+      console.error(error);
+      return;
+    }
+
+    annulerModification();
+    chargerActions();
+  }
+
   function couleurStatut(statut) {
     if (statut === "cloturee") return "green";
     if (statut === "en cours") return "orange";
@@ -150,36 +216,83 @@ export default function Actions() {
       <div className="list-container">
         {actions.map((action) => (
           <div key={action.id} className="item-card">
-            <h3>{action.titre}</h3>
+            {actionEnModification === action.id ? (
+              <>
+                <input
+                  type="text"
+                  value={titreModif}
+                  onChange={(e) => setTitreModif(e.target.value)}
+                />
 
-            <p>
-              <strong>Responsable :</strong> {action.responsable}
-            </p>
+                <input
+                  type="text"
+                  value={responsableModif}
+                  onChange={(e) => setResponsableModif(e.target.value)}
+                />
 
-            <p>
-              <strong>Statut :</strong>{" "}
-              <span
-                style={{
-                  color: couleurStatut(action.statut),
-                  fontWeight: "bold",
-                }}
-              >
-                {action.statut}
-              </span>
-            </p>
+                <select
+                  value={statutModif}
+                  onChange={(e) => setStatutModif(e.target.value)}
+                >
+                  <option value="">Choisir un statut</option>
+                  <option value="ouverte">Ouverte</option>
+                  <option value="en cours">En cours</option>
+                  <option value="cloturee">Clôturée</option>
+                </select>
 
-            <p>
-              <strong>Date de création :</strong>{" "}
-              {formatDate(action.created_at)}
-            </p>
+                <input
+                  type="date"
+                  value={echeanceModif}
+                  onChange={(e) => setEcheanceModif(e.target.value)}
+                />
 
-            <p>
-              <strong>Date d'échéance :</strong> {formatDate(action.echeance)}
-            </p>
+                <button onClick={() => enregistrerModification(action.id)}>
+                  Enregistrer
+                </button>
 
-            <button onClick={() => supprimerAction(action.id)}>
-              Supprimer
-            </button>
+                <button onClick={annulerModification}>
+                  Annuler
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>{action.titre}</h3>
+
+                <p>
+                  <strong>Responsable :</strong> {action.responsable}
+                </p>
+
+                <p>
+                  <strong>Statut :</strong>{" "}
+                  <span
+                    style={{
+                      color: couleurStatut(action.statut),
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {action.statut}
+                  </span>
+                </p>
+
+                <p>
+                  <strong>Date de création :</strong>{" "}
+                  {formatDate(action.created_at)}
+                </p>
+
+                <p>
+                  <strong>Date d'échéance :</strong>{" "}
+                  {formatDate(action.echeance)}
+                </p>
+
+                <button onClick={() => ouvrirModification(action)}>
+                  Modifier
+                </button>
+
+                <button onClick={() => supprimerAction(action.id)}>
+                  Supprimer
+                </button>
+              </>
+            )}
           </div>
         ))}
       </div>
