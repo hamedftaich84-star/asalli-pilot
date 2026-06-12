@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
+import PageLayout from "../components/PageLayout";
+import ErrorMessage from "../components/ErrorMessage";
 
 export default function Actions() {
   const [actions, setActions] = useState([]);
@@ -8,6 +10,7 @@ export default function Actions() {
   const [responsable, setResponsable] = useState("");
   const [statut, setStatut] = useState("");
   const [echeance, setEcheance] = useState("");
+  const [messageErreur, setMessageErreur] = useState("");
 
   async function chargerActions() {
     const { data, error } = await supabase
@@ -16,7 +19,7 @@ export default function Actions() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("Erreur lors du chargement des actions");
+      setMessageErreur("Erreur lors du chargement des actions");
       console.error(error);
       return;
     }
@@ -30,9 +33,25 @@ export default function Actions() {
 
   async function ajouterAction(event) {
     event.preventDefault();
+    setMessageErreur("");
 
-    if (!titre || !responsable || !statut || !echeance) {
-      alert("Veuillez remplir tous les champs");
+    if (!titre.trim()) {
+      setMessageErreur("Veuillez saisir le titre de l'action");
+      return;
+    }
+
+    if (!responsable.trim()) {
+      setMessageErreur("Veuillez saisir le responsable");
+      return;
+    }
+
+    if (!statut) {
+      setMessageErreur("Veuillez sélectionner un statut");
+      return;
+    }
+
+    if (!echeance) {
+      setMessageErreur("Veuillez entrer la date d'échéance");
       return;
     }
 
@@ -46,7 +65,7 @@ export default function Actions() {
     ]);
 
     if (error) {
-      alert("Erreur lors de l'ajout de l'action");
+      setMessageErreur("Erreur lors de l'ajout de l'action");
       console.error(error);
       return;
     }
@@ -60,7 +79,7 @@ export default function Actions() {
   }
 
   async function supprimerAction(id) {
-    const confirmation = confirm("Supprimer cette action corrective ?");
+    const confirmation = confirm("Supprimer cette action ?");
 
     if (!confirmation) return;
 
@@ -70,7 +89,7 @@ export default function Actions() {
       .eq("id", id);
 
     if (error) {
-      alert("Erreur lors de la suppression");
+      setMessageErreur("Erreur lors de la suppression");
       console.error(error);
       return;
     }
@@ -90,16 +109,13 @@ export default function Actions() {
   }
 
   return (
-    <div className="page-container">
-      <h1>Actions Correctives</h1>
-
-      <form className="form-card" onSubmit={ajouterAction}>
+    <PageLayout title="Actions Correctives">
+      <form className="form-card" onSubmit={ajouterAction} noValidate>
         <input
           type="text"
           placeholder="Titre de l'action"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
-          required
         />
 
         <input
@@ -107,14 +123,9 @@ export default function Actions() {
           placeholder="Responsable"
           value={responsable}
           onChange={(e) => setResponsable(e.target.value)}
-          required
         />
 
-        <select
-          value={statut}
-          onChange={(e) => setStatut(e.target.value)}
-          required
-        >
+        <select value={statut} onChange={(e) => setStatut(e.target.value)}>
           <option value="">Choisir un statut</option>
           <option value="ouverte">Ouverte</option>
           <option value="en cours">En cours</option>
@@ -125,11 +136,12 @@ export default function Actions() {
           type="date"
           value={echeance}
           onChange={(e) => setEcheance(e.target.value)}
-          required
         />
 
         <button type="submit">Ajouter l'action</button>
       </form>
+
+      <ErrorMessage message={messageErreur} />
 
       <h2>Liste des actions</h2>
 
@@ -162,8 +174,7 @@ export default function Actions() {
             </p>
 
             <p>
-              <strong>Date d'échéance :</strong>{" "}
-              {formatDate(action.echeance)}
+              <strong>Date d'échéance :</strong> {formatDate(action.echeance)}
             </p>
 
             <button onClick={() => supprimerAction(action.id)}>
@@ -172,6 +183,6 @@ export default function Actions() {
           </div>
         ))}
       </div>
-    </div>
+    </PageLayout>
   );
 }
