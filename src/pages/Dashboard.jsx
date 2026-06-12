@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import PDCAWheel from "../components/PDCAWheel";
+import ActionsChart from "../components/ActionsChart";
+import AuditsChart from "../components/AuditsChart";
 import { supabase } from "../services/supabase";
 import "../App.css";
 
@@ -14,6 +16,10 @@ export default function Dashboard() {
   const [actionsEnCours, setActionsEnCours] = useState(0);
   const [actionsCloturees, setActionsCloturees] = useState(0);
   const [actionsEnRetard, setActionsEnRetard] = useState(0);
+
+  const [auditsIso9001, setAuditsIso9001] = useState(0);
+  const [auditsIso14001, setAuditsIso14001] = useState(0);
+  const [auditsIso45001, setAuditsIso45001] = useState(0);
 
   useEffect(() => {
     async function loadData() {
@@ -30,7 +36,23 @@ export default function Dashboard() {
       if (!rexResult.error) setNbRex(rexResult.data.length);
 
       const auditsResult = await supabase.from("audits_iso").select("*");
-      if (!auditsResult.error) setNbAudits(auditsResult.data.length);
+      if (!auditsResult.error) {
+        const audits = auditsResult.data || [];
+
+        setNbAudits(audits.length);
+
+        setAuditsIso9001(
+          audits.filter((audit) => audit.norme === "ISO 9001").length
+        );
+
+        setAuditsIso14001(
+          audits.filter((audit) => audit.norme === "ISO 14001").length
+        );
+
+        setAuditsIso45001(
+          audits.filter((audit) => audit.norme === "ISO 45001").length
+        );
+      }
 
       const actionsResult = await supabase
         .from("actions_correctives")
@@ -139,6 +161,20 @@ export default function Dashboard() {
 
       <div className="dashboard-section">
         <PDCAWheel />
+      </div>
+
+      <div className="charts-grid">
+        <ActionsChart
+          ouvertes={actionsOuvertes}
+          enCours={actionsEnCours}
+          cloturees={actionsCloturees}
+        />
+
+        <AuditsChart
+          iso9001={auditsIso9001}
+          iso14001={auditsIso14001}
+          iso45001={auditsIso45001}
+        />
       </div>
 
       <h2>Utilisateurs</h2>
