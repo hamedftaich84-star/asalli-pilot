@@ -25,7 +25,6 @@ import Register from "./pages/Register";
 function AppContent() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const location = useLocation();
 
   useEffect(() => {

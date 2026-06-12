@@ -16,14 +16,7 @@ export function exportActionsPdf(actions) {
 
   autoTable(doc, {
     startY: 35,
-    head: [
-      [
-        "Titre",
-        "Responsable",
-        "Statut",
-        "Échéance",
-      ],
-    ],
+    head: [["Titre", "Responsable", "Statut", "Échéance"]],
     body: actions.map((action) => [
       action.titre,
       action.responsable,

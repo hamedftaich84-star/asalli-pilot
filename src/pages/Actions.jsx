@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 import PageLayout from "../components/PageLayout";
 import ErrorMessage from "../components/ErrorMessage";
+import { exportActionsPdf } from "../services/exportActionsPdf";
 
 export default function Actions() {
   const [actions, setActions] = useState([]);
@@ -209,6 +210,21 @@ export default function Actions() {
 
       <ErrorMessage message={messageErreur} />
 
+      <button
+        onClick={() => exportActionsPdf(actions)}
+        style={{
+          marginBottom: "20px",
+          background: "#2563eb",
+          color: "white",
+          border: "none",
+          padding: "10px 16px",
+          borderRadius: "8px",
+          cursor: "pointer",
+        }}
+      >
+        Exporter PDF
+      </button>
+
       <h2>Liste des actions</h2>
 
       <p>Nombre d'actions : {actions.length}</p>
@@ -250,9 +266,7 @@ export default function Actions() {
                   Enregistrer
                 </button>
 
-                <button onClick={annulerModification}>
-                  Annuler
-                </button>
+                <button onClick={annulerModification}>Annuler</button>
               </>
             ) : (
               <>
