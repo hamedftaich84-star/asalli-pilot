@@ -8,6 +8,7 @@ import Visites from "./pages/Visites";
 import Rex from "./pages/Rex";
 import Actions from "./pages/Actions";
 import Audits from "./pages/Audits";
+import Users from "./pages/Users";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/rex" element={<Rex />} />
         <Route path="/actions" element={<Actions />} />
         <Route path="/audits" element={<Audits />} />
+        <Route path="/users" element={<Users />} />
       </Routes>
     </BrowserRouter>
   );

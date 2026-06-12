@@ -8,6 +8,7 @@ export default function Navbar() {
         background: "#1f2937",
         display: "flex",
         gap: "20px",
+        flexWrap: "wrap",
       }}
     >
       <Link style={{ color: "white" }} to="/">Dashboard</Link>
@@ -16,6 +17,7 @@ export default function Navbar() {
       <Link style={{ color: "white" }} to="/rex">REX</Link>
       <Link style={{ color: "white" }} to="/actions">Actions</Link>
       <Link style={{ color: "white" }} to="/audits">Audits</Link>
+      <Link style={{ color: "white" }} to="/users">Utilisateurs</Link>
     </nav>
   );
 }
