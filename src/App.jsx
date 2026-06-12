@@ -37,12 +37,11 @@ function AppContent() {
 
     getSession();
 
-    const { data: listener } =
-      supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          setSession(session);
-        }
-      );
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+      }
+    );
 
     return () => {
       listener.subscription.unsubscribe();
@@ -50,7 +49,7 @@ function AppContent() {
   }, []);
 
   if (loading) {
-    return <p>Chargement...</p>;
+    return <p style={{ padding: "30px" }}>Chargement...</p>;
   }
 
   const isAuthPage =
@@ -74,7 +73,6 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
 
         <Route path="/" element={<Dashboard />} />
-
         <Route path="/causeries" element={<Causeries />} />
         <Route path="/visites" element={<Visites />} />
         <Route path="/rex" element={<Rex />} />
@@ -98,11 +96,7 @@ function AppContent() {
         <Route
           path="/users"
           element={
-            <ProtectedRoute
-              allowedRoles={[
-                "Administrateur",
-              ]}
-            >
+            <ProtectedRoute allowedRoles={["Administrateur"]}>
               <Users />
             </ProtectedRoute>
           }
