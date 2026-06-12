@@ -121,6 +121,8 @@ export default function Causeries() {
       </form>
 
       <h2>Liste des causeries</h2>
+      
+      <p>Nombre de causeries : {causeries.length}</p>
 
       <div className="list-container">
         {causeries.map((c) => (
