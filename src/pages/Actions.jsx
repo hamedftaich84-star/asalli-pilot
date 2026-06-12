@@ -35,7 +35,10 @@ export default function Actions() {
       alert("Veuillez remplir tous les champs");
       return;
     }
-
+    if (!echeance) {
+      alert("Veuillez entrer la date d'échance");
+      return;
+    }
     const { error } = await supabase.from("actions_correctives").insert([
       {
         titre,
