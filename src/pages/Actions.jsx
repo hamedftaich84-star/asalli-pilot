@@ -6,14 +6,14 @@ export default function Actions() {
 
   const [titre, setTitre] = useState("");
   const [responsable, setResponsable] = useState("");
-  const [statut, setStatut] = useState("ouverte");
+  const [statut, setStatut] = useState("");
   const [echeance, setEcheance] = useState("");
 
-  async function loadActions() {
+  async function chargerActions() {
     const { data, error } = await supabase
       .from("actions_correctives")
       .select("*")
-      .order("echeance", { ascending: true });
+      .order("created_at", { ascending: false });
 
     if (error) {
       alert("Erreur lors du chargement des actions");
@@ -25,11 +25,16 @@ export default function Actions() {
   }
 
   useEffect(() => {
-    loadActions();
+    chargerActions();
   }, []);
 
   async function ajouterAction(event) {
     event.preventDefault();
+
+    if (!titre || !responsable || !statut || !echeance) {
+      alert("Veuillez remplir tous les champs");
+      return;
+    }
 
     const { error } = await supabase.from("actions_correctives").insert([
       {
@@ -48,14 +53,14 @@ export default function Actions() {
 
     setTitre("");
     setResponsable("");
-    setStatut("ouverte");
+    setStatut("");
     setEcheance("");
 
-    loadActions();
+    chargerActions();
   }
 
   async function supprimerAction(id) {
-    const confirmation = confirm("Supprimer cette action ?");
+    const confirmation = confirm("Supprimer cette action corrective ?");
 
     if (!confirmation) return;
 
@@ -70,7 +75,18 @@ export default function Actions() {
       return;
     }
 
-    loadActions();
+    chargerActions();
+  }
+
+  function couleurStatut(statut) {
+    if (statut === "cloturee") return "green";
+    if (statut === "en cours") return "orange";
+    return "red";
+  }
+
+  function formatDate(date) {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString("fr-FR");
   }
 
   return (
@@ -99,6 +115,7 @@ export default function Actions() {
           onChange={(e) => setStatut(e.target.value)}
           required
         >
+          <option value="">Choisir un statut</option>
           <option value="ouverte">Ouverte</option>
           <option value="en cours">En cours</option>
           <option value="cloturee">Clôturée</option>
@@ -128,11 +145,25 @@ export default function Actions() {
             </p>
 
             <p>
-              <strong>Statut :</strong> {action.statut}
+              <strong>Statut :</strong>{" "}
+              <span
+                style={{
+                  color: couleurStatut(action.statut),
+                  fontWeight: "bold",
+                }}
+              >
+                {action.statut}
+              </span>
             </p>
 
             <p>
-              <strong>Échéance :</strong> {action.echeance}
+              <strong>Date de création :</strong>{" "}
+              {formatDate(action.created_at)}
+            </p>
+
+            <p>
+              <strong>Date d'échéance :</strong>{" "}
+              {formatDate(action.echeance)}
             </p>
 
             <button onClick={() => supprimerAction(action.id)}>
