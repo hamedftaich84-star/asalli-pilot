@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [actionsEnCours, setActionsEnCours] = useState(0);
   const [actionsCloturees, setActionsCloturees] = useState(0);
   const [actionsEnRetard, setActionsEnRetard] = useState(0);
+  const [actionsEcheanceProche, setActionsEcheanceProche] = useState(0);
 
   const [auditsIso9001, setAuditsIso9001] = useState(0);
   const [auditsIso14001, setAuditsIso14001] = useState(0);
@@ -61,28 +62,41 @@ export default function Dashboard() {
 
       if (!actionsResult.error) {
         const actions = actionsResult.data || [];
-        const today = new Date().toISOString().split("T")[0];
+        const todayDate = new Date();
 
         setActionsOuvertes(
-          actions.filter((a) => a.statut === "ouverte").length
+          actions.filter((action) => action.statut === "ouverte").length
         );
 
         setActionsEnCours(
-          actions.filter((a) => a.statut === "en cours").length
+          actions.filter((action) => action.statut === "en cours").length
         );
 
         setActionsCloturees(
-          actions.filter((a) => a.statut === "cloturee").length
+          actions.filter((action) => action.statut === "cloturee").length
         );
 
-        setActionsEnRetard(
-          actions.filter(
-            (a) =>
-              a.echeance &&
-              a.echeance < today &&
-              a.statut !== "cloturee"
-          ).length
-        );
+        const retard = actions.filter((action) => {
+          if (!action.echeance || action.statut === "cloturee") return false;
+
+          const echeance = new Date(action.echeance);
+
+          return echeance < todayDate;
+        }).length;
+
+        const proche = actions.filter((action) => {
+          if (!action.echeance || action.statut === "cloturee") return false;
+
+          const echeance = new Date(action.echeance);
+
+          const diffJours =
+            (echeance - todayDate) / (1000 * 60 * 60 * 24);
+
+          return diffJours >= 0 && diffJours <= 7;
+        }).length;
+
+        setActionsEnRetard(retard);
+        setActionsEcheanceProche(proche);
       }
     }
 
@@ -100,6 +114,7 @@ export default function Dashboard() {
       actionsEnCours,
       actionsCloturees,
       actionsEnRetard,
+      actionsEcheanceProche,
       auditsIso9001,
       auditsIso14001,
       auditsIso45001,
@@ -161,6 +176,17 @@ export default function Dashboard() {
         </div>
 
         <div className="kpi-card">
+          <span>Échéance ≤ 7 jours</span>
+          <strong
+            style={{
+              color: actionsEcheanceProche > 0 ? "orange" : "green",
+            }}
+          >
+            {actionsEcheanceProche}
+          </strong>
+        </div>
+
+        <div className="kpi-card">
           <span>Actions ouvertes</span>
           <strong style={{ color: "red" }}>{actionsOuvertes}</strong>
         </div>
@@ -189,6 +215,23 @@ export default function Dashboard() {
           }}
         >
           ⚠ {actionsEnRetard} action(s) corrective(s) en retard
+        </div>
+      )}
+
+      {actionsEcheanceProche > 0 && (
+        <div
+          style={{
+            background: "#fef3c7",
+            color: "#92400e",
+            padding: "15px",
+            borderRadius: "10px",
+            marginBottom: "25px",
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          ⚠ {actionsEcheanceProche} action(s) arrivent à échéance dans les 7
+          jours
         </div>
       )}
 
