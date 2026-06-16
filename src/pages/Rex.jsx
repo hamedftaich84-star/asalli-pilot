@@ -3,6 +3,7 @@ import { supabase } from "../services/supabase";
 
 export default function Rex() {
   const [rex, setRex] = useState([]);
+  const [message, setMessage] = useState("");
 
   const [typeRex, setTypeRex] = useState("");
   const [description, setDescription] = useState("");
@@ -17,7 +18,7 @@ export default function Rex() {
       .order("date_rex", { ascending: false });
 
     if (error) {
-      alert("Erreur lors du chargement des REX");
+      setMessage("Erreur lors du chargement des REX");
       console.error(error);
       return;
     }
@@ -31,6 +32,7 @@ export default function Rex() {
 
   async function ajouterRex(event) {
     event.preventDefault();
+    setMessage("");
 
     const { error } = await supabase.from("rex").insert([
       {
@@ -43,7 +45,7 @@ export default function Rex() {
     ]);
 
     if (error) {
-      alert("Erreur lors de l'ajout du REX");
+      setMessage("Erreur lors de l'ajout du REX");
       console.error(error);
       return;
     }
@@ -55,6 +57,8 @@ export default function Rex() {
     setActions("");
 
     loadRex();
+
+    setMessage("REX ajouté avec succès.");
   }
 
   async function supprimerRex(id) {
@@ -68,12 +72,47 @@ export default function Rex() {
       .eq("id", id);
 
     if (error) {
-      alert("Erreur lors de la suppression");
+      setMessage("Erreur lors de la suppression");
       console.error(error);
       return;
     }
 
     loadRex();
+  }
+
+  async function creerActionCorrective(item) {
+    setMessage("");
+
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
+
+    const echeance = date.toISOString().split("T")[0];
+
+    const titreAction =
+      item.description && item.description.length > 80
+        ? `Action corrective - ${item.description.substring(0, 80)}...`
+        : `Action corrective - ${item.description}`;
+
+    const { error } = await supabase
+      .from("actions_correctives")
+      .insert([
+        {
+          titre: titreAction,
+          responsable: "",
+          statut: "ouverte",
+          echeance,
+        },
+      ]);
+
+    if (error) {
+      setMessage("Erreur lors de la création de l'action corrective");
+      console.error(error);
+      return;
+    }
+
+    setMessage(
+      "Action corrective créée avec succès dans le module Actions."
+    );
   }
 
   return (
@@ -121,8 +160,25 @@ export default function Rex() {
           onChange={(e) => setActions(e.target.value)}
         />
 
-        <button type="submit">Ajouter le REX</button>
+        <button type="submit">
+          Ajouter le REX
+        </button>
       </form>
+
+      {message && (
+        <div
+          style={{
+            background: "#dbeafe",
+            color: "#1e40af",
+            padding: "12px",
+            borderRadius: "8px",
+            marginBottom: "20px",
+            fontWeight: "bold",
+          }}
+        >
+          {message}
+        </div>
+      )}
 
       <h2>Liste des REX</h2>
 
@@ -146,10 +202,18 @@ export default function Rex() {
             </p>
 
             <p>
-              <strong>Actions :</strong> {item.actions}
+              <strong>Actions décidées :</strong> {item.actions}
             </p>
 
-            <button onClick={() => supprimerRex(item.id)}>
+            <button
+              onClick={() => creerActionCorrective(item)}
+            >
+              Créer une action corrective
+            </button>
+
+            <button
+              onClick={() => supprimerRex(item.id)}
+            >
               Supprimer
             </button>
           </div>
