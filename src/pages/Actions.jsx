@@ -2,17 +2,23 @@ import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 import PageLayout from "../components/PageLayout";
 import ErrorMessage from "../components/ErrorMessage";
+import { useToast } from "../components/Toast";
 import { exportActionsPdf } from "../services/exportActionsPdf";
+import { Download, Plus, Trash2, Edit, Save, X, Calendar, User, CheckCircle } from "lucide-react";
 
 export default function Actions() {
+  const { addToast } = useToast();
   const [actions, setActions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  // Form states
   const [titre, setTitre] = useState("");
   const [responsable, setResponsable] = useState("");
   const [statut, setStatut] = useState("");
   const [echeance, setEcheance] = useState("");
   const [messageErreur, setMessageErreur] = useState("");
 
+  // Edit states
   const [actionEnModification, setActionEnModification] = useState(null);
   const [titreModif, setTitreModif] = useState("");
   const [responsableModif, setResponsableModif] = useState("");
@@ -62,10 +68,12 @@ export default function Actions() {
       return;
     }
 
+    setLoading(true);
+
     const { error } = await supabase.from("actions_correctives").insert([
       {
         titre,
-        responsable,
+        responsable, // compatible with the existing DB column name
         statut,
         echeance,
       },
@@ -74,20 +82,22 @@ export default function Actions() {
     if (error) {
       setMessageErreur("Erreur lors de l'ajout de l'action");
       console.error(error);
+      setLoading(false);
       return;
     }
 
+    addToast("Action corrective créée avec succès !", "success");
     setTitre("");
     setResponsable("");
     setStatut("");
     setEcheance("");
 
     chargerActions();
+    setLoading(false);
   }
 
   async function supprimerAction(id) {
     const confirmation = confirm("Supprimer cette action ?");
-
     if (!confirmation) return;
 
     const { error } = await supabase
@@ -101,6 +111,7 @@ export default function Actions() {
       return;
     }
 
+    addToast("Action supprimée", "success");
     chargerActions();
   }
 
@@ -160,14 +171,15 @@ export default function Actions() {
       return;
     }
 
+    addToast("Action mise à jour !", "success");
     annulerModification();
     chargerActions();
   }
 
   function couleurStatut(statut) {
-    if (statut === "cloturee") return "green";
-    if (statut === "en cours") return "orange";
-    return "red";
+    if (statut === "cloturee") return "var(--color-d-do)";
+    if (statut === "en cours") return "var(--color-c-check)";
+    return "var(--color-a-act)";
   }
 
   function formatDate(date) {
@@ -175,140 +187,261 @@ export default function Actions() {
     return new Date(date).toLocaleDateString("fr-FR");
   }
 
+  const handleExportPdf = () => {
+    if (actions.length === 0) {
+      addToast("Aucune action à exporter.", "info");
+      return;
+    }
+    exportActionsPdf(actions);
+    addToast("Plan d'actions exporté en PDF avec succès !", "success");
+  };
+
   return (
     <PageLayout title="Actions Correctives">
-      <form className="form-card" onSubmit={ajouterAction} noValidate>
-        <input
-          type="text"
-          placeholder="Titre de l'action"
-          value={titre}
-          onChange={(e) => setTitre(e.target.value)}
-        />
+      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "2rem" }} className="grid-2">
+        
+        {/* Création Action */}
+        <div>
+          <form className="form-card" onSubmit={ajouterAction} noValidate>
+            <h2 style={{ fontSize: "1.2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>
+              Enregistrer une Action Corrective
+            </h2>
 
-        <input
-          type="text"
-          placeholder="Responsable"
-          value={responsable}
-          onChange={(e) => setResponsable(e.target.value)}
-        />
+            <div className="input-group">
+              <label className="input-label">Titre de l'Action</label>
+              <input
+                type="text"
+                placeholder="Ex: Remplacer le câble d'alimentation du poste de soudure"
+                value={titre}
+                onChange={(e) => setTitre(e.target.value)}
+                className="input-field"
+                required
+              />
+            </div>
 
-        <select value={statut} onChange={(e) => setStatut(e.target.value)}>
-          <option value="">Choisir un statut</option>
-          <option value="ouverte">Ouverte</option>
-          <option value="en cours">En cours</option>
-          <option value="cloturee">Clôturée</option>
-        </select>
+            <div className="grid-2" style={{ gap: "1rem" }}>
+              <div className="input-group">
+                <label className="input-label">Responsable désigné</label>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", display: "flex" }}>
+                    <User size={16} />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Ex: Robert Martin"
+                    value={responsable}
+                    onChange={(e) => setResponsable(e.target.value)}
+                    className="input-field"
+                    style={{ paddingLeft: "36px" }}
+                    required
+                  />
+                </div>
+              </div>
 
-        <input
-          type="date"
-          value={echeance}
-          onChange={(e) => setEcheance(e.target.value)}
-        />
+              <div className="input-group">
+                <label className="input-label">Date d'Échéance</label>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", display: "flex" }}>
+                    <Calendar size={16} />
+                  </span>
+                  <input
+                    type="date"
+                    value={echeance}
+                    onChange={(e) => setEcheance(e.target.value)}
+                    className="input-field"
+                    style={{ paddingLeft: "36px" }}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
 
-        <button type="submit">Ajouter l'action</button>
-      </form>
+            <div className="input-group">
+              <label className="input-label">Statut Initial</label>
+              <select 
+                value={statut} 
+                onChange={(e) => setStatut(e.target.value)} 
+                className="input-field"
+                style={{ padding: "0 0.75rem" }}
+                required
+              >
+                <option value="">Choisir un statut</option>
+                <option value="ouverte">🔴 Ouverte (Non débutée)</option>
+                <option value="en cours">🟡 En cours</option>
+                <option value="cloturee">🟢 Clôturée</option>
+              </select>
+            </div>
 
-      <ErrorMessage message={messageErreur} />
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: "100%", height: "48px", marginTop: "0.5rem" }}
+              disabled={loading}
+            >
+              <Plus size={18} /> Ajouter l'action
+            </button>
+          </form>
 
-      <button
-        onClick={() => exportActionsPdf(actions)}
-        style={{
-          marginBottom: "20px",
-          background: "#2563eb",
-          color: "white",
-          border: "none",
-          padding: "10px 16px",
-          borderRadius: "8px",
-          cursor: "pointer",
-        }}
-      >
-        Exporter PDF
-      </button>
+          {messageErreur && <ErrorMessage message={messageErreur} />}
+        </div>
 
-      <h2>Liste des actions</h2>
+        {/* Liste des actions */}
+        <div>
+          <div className="card" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>
+              <h2 style={{ fontSize: "1.2rem", margin: 0 }}>
+                Plan d'Actions ({actions.length})
+              </h2>
+              <button
+                onClick={handleExportPdf}
+                className="btn btn-secondary"
+                style={{ height: "32px", fontSize: "0.75rem", padding: "0 10px", borderRadius: "4px" }}
+              >
+                <Download size={14} /> PDF
+              </button>
+            </div>
 
-      <p>Nombre d'actions : {actions.length}</p>
-
-      <div className="list-container">
-        {actions.map((action) => (
-          <div key={action.id} className="item-card">
-            {actionEnModification === action.id ? (
-              <>
-                <input
-                  type="text"
-                  value={titreModif}
-                  onChange={(e) => setTitreModif(e.target.value)}
-                />
-
-                <input
-                  type="text"
-                  value={responsableModif}
-                  onChange={(e) => setResponsableModif(e.target.value)}
-                />
-
-                <select
-                  value={statutModif}
-                  onChange={(e) => setStatutModif(e.target.value)}
-                >
-                  <option value="">Choisir un statut</option>
-                  <option value="ouverte">Ouverte</option>
-                  <option value="en cours">En cours</option>
-                  <option value="cloturee">Clôturée</option>
-                </select>
-
-                <input
-                  type="date"
-                  value={echeanceModif}
-                  onChange={(e) => setEcheanceModif(e.target.value)}
-                />
-
-                <button onClick={() => enregistrerModification(action.id)}>
-                  Enregistrer
-                </button>
-
-                <button onClick={annulerModification}>Annuler</button>
-              </>
-            ) : (
-              <>
-                <h3>{action.titre}</h3>
-
-                <p>
-                  <strong>Responsable :</strong> {action.responsable}
-                </p>
-
-                <p>
-                  <strong>Statut :</strong>{" "}
-                  <span
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxHeight: "80vh", overflowY: "auto", paddingRight: "5px" }}>
+              {actions.length === 0 ? (
+                <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>Aucune action dans le plan.</p>
+              ) : (
+                actions.map((action) => (
+                  <div
+                    key={action.id}
+                    className="card"
                     style={{
-                      color: couleurStatut(action.statut),
-                      fontWeight: "bold",
+                      padding: "1.25rem",
+                      boxShadow: "var(--shadow-sm)",
+                      borderLeft: `5px solid ${couleurStatut(action.statut)}`,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.75rem",
+                      transform: "none",
                     }}
                   >
-                    {action.statut}
-                  </span>
-                </p>
+                    {actionEnModification === action.id ? (
+                      /* Mode Edition */
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        <div className="input-group" style={{ marginBottom: 0 }}>
+                          <label className="input-label" style={{ fontSize: "0.65rem" }}>Titre de l'action</label>
+                          <input
+                            type="text"
+                            value={titreModif}
+                            onChange={(e) => setTitreModif(e.target.value)}
+                            className="input-field"
+                            style={{ height: "38px", fontSize: "0.85rem" }}
+                          />
+                        </div>
 
-                <p>
-                  <strong>Date de création :</strong>{" "}
-                  {formatDate(action.created_at)}
-                </p>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                          <div className="input-group" style={{ marginBottom: 0 }}>
+                            <label className="input-label" style={{ fontSize: "0.65rem" }}>Responsable</label>
+                            <input
+                              type="text"
+                              value={responsableModif}
+                              onChange={(e) => setResponsableModif(e.target.value)}
+                              className="input-field"
+                              style={{ height: "38px", fontSize: "0.85rem" }}
+                            />
+                          </div>
 
-                <p>
-                  <strong>Date d'échéance :</strong>{" "}
-                  {formatDate(action.echeance)}
-                </p>
+                          <div className="input-group" style={{ marginBottom: 0 }}>
+                            <label className="input-label" style={{ fontSize: "0.65rem" }}>Échéance</label>
+                            <input
+                              type="date"
+                              value={echeanceModif}
+                              onChange={(e) => setEcheanceModif(e.target.value)}
+                              className="input-field"
+                              style={{ height: "38px", fontSize: "0.85rem" }}
+                            />
+                          </div>
+                        </div>
 
-                <button onClick={() => ouvrirModification(action)}>
-                  Modifier
-                </button>
+                        <div className="input-group" style={{ marginBottom: 0 }}>
+                          <label className="input-label" style={{ fontSize: "0.65rem" }}>Statut</label>
+                          <select
+                            value={statutModif}
+                            onChange={(e) => setStatutModif(e.target.value)}
+                            className="input-field"
+                            style={{ height: "38px", fontSize: "0.85rem", padding: "0 4px" }}
+                          >
+                            <option value="ouverte">Ouverte</option>
+                            <option value="en cours">En cours</option>
+                            <option value="cloturee">Clôturée</option>
+                          </select>
+                        </div>
 
-                <button onClick={() => supprimerAction(action.id)}>
-                  Supprimer
-                </button>
-              </>
-            )}
+                        <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                          <button
+                            onClick={() => enregistrerModification(action.id)}
+                            className="btn btn-primary"
+                            style={{ height: "32px", fontSize: "0.75rem", flex: 1, borderRadius: "4px" }}
+                          >
+                            <Save size={14} /> Enregistrer
+                          </button>
+                          <button
+                            onClick={annulerModification}
+                            className="btn btn-secondary"
+                            style={{ height: "32px", fontSize: "0.75rem", flex: 1, borderRadius: "4px" }}
+                          >
+                            <X size={14} /> Annuler
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Mode Visualisation */
+                      <>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                          <h4 style={{ color: "var(--text-main)", fontSize: "0.95rem", fontWeight: 800 }}>{action.titre}</h4>
+                          <button
+                            onClick={() => supprimerAction(action.id)}
+                            className="btn btn-secondary"
+                            style={{ height: "28px", width: "28px", padding: 0, color: "var(--color-a-act)", borderRadius: "4px" }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                          <strong>Responsable :</strong> {action.responsable}
+                        </p>
+
+                        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "10px", marginTop: "4px" }}>
+                          <span 
+                            className="badge" 
+                            style={{
+                              backgroundColor: action.statut === "cloturee" ? "hsl(142, 70%, 95%)" : action.statut === "en cours" ? "hsl(38, 92%, 95%)" : "hsl(350, 89%, 95%)",
+                              color: couleurStatut(action.statut),
+                              fontSize: "0.7rem",
+                              fontWeight: 800
+                            }}
+                          >
+                            {action.statut}
+                          </span>
+
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                            Échéance : <strong>{formatDate(action.echeance)}</strong>
+                          </span>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "8px", borderTop: "1px dashed var(--border-color)", paddingTop: "0.5rem", marginTop: "0.5rem" }}>
+                          <button
+                            onClick={() => ouvrirModification(action)}
+                            className="btn btn-secondary"
+                            style={{ height: "30px", fontSize: "0.75rem", padding: "0 8px", borderRadius: "4px", flex: 1, display: "inline-flex", alignItems: "center", gap: "4px" }}
+                          >
+                            <Edit size={12} /> Modifier
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        ))}
+        </div>
+
       </div>
     </PageLayout>
   );

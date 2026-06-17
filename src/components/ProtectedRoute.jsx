@@ -1,33 +1,14 @@
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { getCurrentUserProfile } from "../services/currentUser";
+import { useAuth } from "../contexts/AuthContext";
 
-export default function ProtectedRoute({
-  children,
-  allowedRoles,
-}) {
-  const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    async function loadRole() {
-      const profile = await getCurrentUserProfile();
-
-      if (profile) {
-        setRole(profile.role);
-      }
-
-      setLoading(false);
-    }
-
-    loadRole();
-  }, []);
+export default function ProtectedRoute({ children, allowedRoles }) {
+  const { profile, loading } = useAuth();
 
   if (loading) {
-    return <p style={{ padding: "30px" }}>Chargement...</p>;
+    return <p style={{ padding: "30px", color: "var(--text-muted)" }}>Chargement...</p>;
   }
 
-  if (!allowedRoles.includes(role)) {
+  if (!profile || !allowedRoles.includes(profile.role)) {
     return <Navigate to="/" replace />;
   }
 

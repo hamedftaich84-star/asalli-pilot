@@ -4,7 +4,7 @@ import ActionsChart from "../components/ActionsChart";
 import AuditsChart from "../components/AuditsChart";
 import { supabase } from "../services/supabase";
 import { exportDashboardPdf } from "../services/exportDashboardPdf";
-import "../App.css";
+import { Download, AlertTriangle, Clock } from "lucide-react";
 
 export default function Dashboard() {
   const [users, setUsers] = useState([]);
@@ -40,58 +40,31 @@ export default function Dashboard() {
       const auditsResult = await supabase.from("audits_iso").select("*");
       if (!auditsResult.error) {
         const audits = auditsResult.data || [];
-
         setNbAudits(audits.length);
-
-        setAuditsIso9001(
-          audits.filter((audit) => audit.norme === "ISO 9001").length
-        );
-
-        setAuditsIso14001(
-          audits.filter((audit) => audit.norme === "ISO 14001").length
-        );
-
-        setAuditsIso45001(
-          audits.filter((audit) => audit.norme === "ISO 45001").length
-        );
+        setAuditsIso9001(audits.filter((audit) => audit.norme === "ISO 9001").length);
+        setAuditsIso14001(audits.filter((audit) => audit.norme === "ISO 14001").length);
+        setAuditsIso45001(audits.filter((audit) => audit.norme === "ISO 45001").length);
       }
 
-      const actionsResult = await supabase
-        .from("actions_correctives")
-        .select("*");
-
+      const actionsResult = await supabase.from("actions_correctives").select("*");
       if (!actionsResult.error) {
         const actions = actionsResult.data || [];
         const todayDate = new Date();
 
-        setActionsOuvertes(
-          actions.filter((action) => action.statut === "ouverte").length
-        );
-
-        setActionsEnCours(
-          actions.filter((action) => action.statut === "en cours").length
-        );
-
-        setActionsCloturees(
-          actions.filter((action) => action.statut === "cloturee").length
-        );
+        setActionsOuvertes(actions.filter((action) => action.statut === "ouverte").length);
+        setActionsEnCours(actions.filter((action) => action.statut === "en cours").length);
+        setActionsCloturees(actions.filter((action) => action.statut === "cloturee").length);
 
         const retard = actions.filter((action) => {
           if (!action.echeance || action.statut === "cloturee") return false;
-
           const echeance = new Date(action.echeance);
-
           return echeance < todayDate;
         }).length;
 
         const proche = actions.filter((action) => {
           if (!action.echeance || action.statut === "cloturee") return false;
-
           const echeance = new Date(action.echeance);
-
-          const diffJours =
-            (echeance - todayDate) / (1000 * 60 * 60 * 24);
-
+          const diffJours = (echeance - todayDate) / (1000 * 60 * 60 * 24);
           return diffJours >= 0 && diffJours <= 7;
         }).length;
 
@@ -123,24 +96,20 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-page">
-      <h1>Tableau de bord ASALLI Pilot</h1>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+        <div>
+          <h1 style={{ fontSize: "1.8rem", color: "var(--text-main)", margin: 0 }}>Tableau de bord ASALLI Pilot</h1>
+          <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "4px" }}>Suivi de l'amélioration continue et de la conformité SSE</p>
+        </div>
 
-      <button
-        onClick={exporterDashboard}
-        style={{
-          marginBottom: "20px",
-          background: "#2563eb",
-          color: "white",
-          border: "none",
-          padding: "10px 16px",
-          borderRadius: "8px",
-          cursor: "pointer",
-        }}
-      >
-        Exporter le tableau de bord PDF
-      </button>
-
-      <h2>Indicateurs QSE</h2>
+        <button
+          onClick={exporterDashboard}
+          className="btn btn-primary"
+          style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+        >
+          <Download size={18} /> Export PDF Dashboard
+        </button>
+      </div>
 
       <div className="kpi-grid">
         <div className="kpi-card">
@@ -150,93 +119,90 @@ export default function Dashboard() {
 
         <div className="kpi-card">
           <span>Causeries SSE</span>
-          <strong>{nbCauseries}</strong>
+          <strong style={{ color: "var(--color-d-do)" }}>{nbCauseries}</strong>
         </div>
 
         <div className="kpi-card">
           <span>Visites SSE</span>
-          <strong>{nbVisites}</strong>
+          <strong style={{ color: "var(--color-c-check)" }}>{nbVisites}</strong>
         </div>
 
         <div className="kpi-card">
-          <span>REX</span>
-          <strong>{nbRex}</strong>
+          <span>REX Déclarés</span>
+          <strong style={{ color: "var(--color-a-act)" }}>{nbRex}</strong>
         </div>
 
         <div className="kpi-card">
           <span>Audits ISO</span>
-          <strong>{nbAudits}</strong>
+          <strong style={{ color: "var(--color-p-plan)" }}>{nbAudits}</strong>
         </div>
 
         <div className="kpi-card">
-          <span>Actions en retard</span>
-          <strong style={{ color: actionsEnRetard > 0 ? "red" : "green" }}>
+          <span>Actions en Retard</span>
+          <strong style={{ color: actionsEnRetard > 0 ? "var(--color-a-act)" : "var(--color-d-do)" }}>
             {actionsEnRetard}
           </strong>
         </div>
 
         <div className="kpi-card">
           <span>Échéance ≤ 7 jours</span>
-          <strong
-            style={{
-              color: actionsEcheanceProche > 0 ? "orange" : "green",
-            }}
-          >
+          <strong style={{ color: actionsEcheanceProche > 0 ? "var(--color-c-check)" : "var(--text-muted)" }}>
             {actionsEcheanceProche}
           </strong>
         </div>
 
         <div className="kpi-card">
-          <span>Actions ouvertes</span>
-          <strong style={{ color: "red" }}>{actionsOuvertes}</strong>
-        </div>
-
-        <div className="kpi-card">
-          <span>Actions en cours</span>
-          <strong style={{ color: "orange" }}>{actionsEnCours}</strong>
-        </div>
-
-        <div className="kpi-card">
-          <span>Actions clôturées</span>
-          <strong style={{ color: "green" }}>{actionsCloturees}</strong>
+          <span>Ratio Clôturé</span>
+          <strong style={{ color: "var(--color-d-do)" }}>
+            {actionsOuvertes + actionsEnCours + actionsCloturees > 0
+              ? `${Math.round((actionsCloturees / (actionsOuvertes + actionsEnCours + actionsCloturees)) * 100)}%`
+              : "0%"}
+          </strong>
         </div>
       </div>
 
       {actionsEnRetard > 0 && (
         <div
           style={{
-            background: "#fee2e2",
-            color: "#991b1b",
+            background: "hsl(350, 89%, 95%)",
+            color: "hsl(350, 89%, 30%)",
+            border: "1px solid hsl(350, 89%, 85%)",
             padding: "15px",
-            borderRadius: "10px",
-            marginBottom: "25px",
+            borderRadius: "var(--radius-sm)",
             fontWeight: "bold",
-            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "10px",
           }}
         >
-          ⚠ {actionsEnRetard} action(s) corrective(s) en retard
+          <AlertTriangle size={20} /> Attention : {actionsEnRetard} action(s) corrective(s) en retard !
         </div>
       )}
 
       {actionsEcheanceProche > 0 && (
         <div
           style={{
-            background: "#fef3c7",
-            color: "#92400e",
+            background: "hsl(38, 92%, 95%)",
+            color: "hsl(38, 92%, 30%)",
+            border: "1px solid hsl(38, 92%, 85%)",
             padding: "15px",
-            borderRadius: "10px",
-            marginBottom: "25px",
+            borderRadius: "var(--radius-sm)",
             fontWeight: "bold",
-            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "10px",
           }}
         >
-          ⚠ {actionsEcheanceProche} action(s) arrivent à échéance dans les 7
-          jours
+          <Clock size={20} /> Alerte : {actionsEcheanceProche} action(s) arrivent à échéance dans les 7 jours.
         </div>
       )}
 
-      <div className="dashboard-section">
-        <PDCAWheel />
+      <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+        <h3 style={{ fontSize: "1.1rem", color: "var(--text-main)", margin: 0 }}>Roue de Deming Interactive</h3>
+        <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>Cliquez sur les quadrants pour accéder directement aux formulaires associés</p>
+        <PDCAWheel counts={{ P: nbAudits, D: nbCauseries, C: nbVisites, A: nbRex }} />
       </div>
 
       <div className="charts-grid">
@@ -253,14 +219,16 @@ export default function Dashboard() {
         />
       </div>
 
-      <h2>Utilisateurs</h2>
-
-      <div className="users-list">
-        {users.map((user) => (
-          <div key={user.id} className="user-line">
-            {user.prenom} {user.nom} — {user.role}
-          </div>
-        ))}
+      <div className="card">
+        <h3 style={{ fontSize: "1.1rem", color: "var(--text-main)", marginBottom: "1rem" }}>Utilisateurs connectés</h3>
+        <div className="users-list">
+          {users.map((user) => (
+            <div key={user.id} className="user-line">
+              <span>{user.prenom} {user.nom}</span>
+              <span className="badge badge-draft" style={{ background: "var(--bg-input)", color: "var(--text-muted)" }}>{user.role}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
